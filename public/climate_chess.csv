@@ -1,8 +1,44 @@
-Team,Piece,Score_Current,Score_Previous,Score_Changed_Date,Summary_Current,Summary_Changed_Date,Confidence,Evidence_Links,Order
-Symptoms,CO₂e Emissions Trend,minus-2,minus-1,8/1/2025,Energy emissions rising; land use flat; CH₄ still increasing.,8/15/2025,High,https://ourworldindata.org/co2-and-other-greenhouse-gas-emissions,1
-Symptoms,Extreme Events,minus-2,minus-2,,Heat waves intensifying; flooding more frequent.,8/10/2025,Medium,https://www.ipcc.ch/report/ar6/wg1/,2
-Team Urgency,Climate Litigation,plus-1,zero,8/5/2025,Courts increasingly receptive to climate liability claims.,8/7/2025,Medium,https://climatecasechart.com,1
-Team Urgency,Renewables Deployment,plus-2,plus-1,8/1/2025,Record renewable capacity additions announced.,8/12/2025,High,https://www.iea.org/reports/renewables-2024,2
-Team No-Urgency,Climate Science as Uncertain,minus-2,minus-1,8/8/2025,Doubt narratives amplified across media despite attribution certainty.,8/9/2025,Low,https://climate.nasa.gov/evidence/,1
-Team No-Urgency,Reversing Laws and Regulations,minus-1,zero,8/4/2025,Rollback of EPA methane rule in U.S.,8/6/2025,Medium,https://www.epa.gov,2
-Team Urgency,Testing Testing,minus-1,zero,8/29/2025,This is a completely new test of the emergency broadcast systems,8/29/2025,Medium,,3
+﻿Team,Piece,Score_Current,Score_Previous,Score_Changed_Date,Summary_Current,Summary_Changed_Date,Confidence,Evidence_Links,Order,Score_Delta,Any_Update_Flag,Arrow,Dot
+Team Urgency,Global Targets and Ambition,minus-1,zero,,"With the Trump Administration in power, and the spread of right-wing populism, global targets and ambitions are under increasing pressure. ",,,,1,0,FALSE,,
+Team Urgency,National Targets and Ambition,plus-1,zero,,U.S. Targets and Ambition have literally changed 180 degrees with the Trump Administration.  This piece will show a more significant change if there is evidence that other countries' climate ambitions falter. ,,,,2,0,FALSE,,
+Team Urgency,Carbon Pricing,plus-1,zero,,"The geographic spread of explicit carbon pricing continues to expand, as does the average global carbon price.  Europe's Border Carbon Adjustment Mechanisms could aggressively promote carbon pricing in other regions. But carbon pricing generally remains well below the levels at which it would have a transformational impact on GHG emissions.  ",,,,3,0,FALSE,,
+Team Urgency,Climate Litigation,plus-1,zero,,"The recent ICJ climate ruling was hugely positive for Team Urgency. That said, the ICJ has no enforcement authority, and the ruling was only advisory in scope.  That's why it resulted in only a modest positive score change.  ",,,,4,0,FALSE,,
+Team Urgency,Climate Finance,minus-1,zero,,Coming Soon,,,,5,0,FALSE,,
+Team Urgency,Carbon Markets,zero,zero,,Carbon Markets are largely stuck in terms of their Climate Chess power on behalf of Team Urgency.  Article 6 carbon markets could end up being a significant positive or negative. ,,,,6,0,FALSE,,
+Team Urgency,Renewables Deployment,plus-1,plus-2,,The news regarding renewable energy deployment ,,,,7,0,FALSE,,
+Team Urgency,Technology Innovation General,plus-1,zero,,Coming Soon,,,,8,0,FALSE,,
+Team Urgency,Transmission Innovation and Deployment,plus-1,zero,,Coming Soon,,,,9,,,,
+Team Urgency,Energy Storage Innovation and Deployment,plus-1,zero,,Coming Soon,,,,10,,,,
+Team Urgency,Electrification Innovation and Deployment,plus-1,zero,,Coming Soon,,,,11,,,,
+Team Urgency,CDR Innovation and Deployment,zero,zero,,Coming Soon,,,,12,0,FALSE,,
+Team Urgency,NBS Innovation and Deployement,zero,zero,,Coming Soon,,,,13,,,,
+Team Urgency,Public Opinion,minus-1,zero,,Coming Soon,,,,14,0,FALSE,,
+Team Urgency,Climate Communications,zero,zero,,Coming Soon,,,,15,0,FALSE,,
+Team Urgency,Voluntary Corporate Action,minus-2,zero,,Coming Soon,,,,16,0,FALSE,,
+Team Urgency,Sectoral Action,minus-1,zero,,Coming Soon,,,,17,0,FALSE,,
+Team Urgency,Climate Economics,minus-1,zero,,Coming Soon,,,,18,0,FALSE,,
+Team Urgency,Climate Voting,minus-1,zero,,Coming Soon,,,,19,0,FALSE,,
+Team Urgency,Climate Philanthropy,zero,zero,,Coming Soon,,,,20,0,FALSE,,
+Team Urgency,Social Movements,plus-1,zero,,Coming Soon,,,,21,0,FALSE,,
+Team Urgency,Climate Change Adaptation,zero,zero,,Coming Soon,,,,22,0,FALSE,,
+Team No-Urgency,Systemic Distractions,minus-2,zero,,Coming Soon,,,,1,,,,
+Team No-Urgency,Energy Humanism as Path Forward,minus-1,zero,,Coming Soon,,,,14,0,FALSE,,
+Team No-Urgency,Climate Mitigation as Futility,minus-1,zero,,Coming Soon,,,,2,0,FALSE,,
+Team No-Urgency,Climate Science as Uncertain,minus-2,zero,,Coming Soon,,,,3,0,FALSE,,
+Team No-Urgency,Climate Mitigation as Costly,zero,zero,,Coming Soon,,,,4,0,FALSE,,
+Team No-Urgency,Renewable Energy as Bad,minus-1,zero,,Coming Soon,,,,5,0,FALSE,,
+Team No-Urgency,Minimization of Climate Risks,minus-2,zero,,Coming Soon,,,,6,0,FALSE,,
+Team No-Urgency,Criminalization of Protest,minus-1,zero,,Coming Soon,,,,7,0,FALSE,,
+Team No-Urgency,SLAPP Suits,minus-2,zero,,Coming Soon,,,,8,0,FALSE,,
+Team No-Urgency,Adaptation as Appropriate Response,zero,zero,,Coming Soon,,,,9,0,FALSE,,
+Team No-Urgency,Corporate Personhood,minus-1,zero,,Coming Soon,,,,10,0,FALSE,,
+Team No-Urgency,Gerrymandering Promotion,minus-2,zero,,Coming Soon,,,,11,0,FALSE,,
+Team No-Urgency,Political Polarization Promotion,minus-2,zero,,Coming Soon,,,,12,0,FALSE,,
+Team No-Urgency,Reversing Laws and Regulations,minus-3,zero,,Coming Soon,,,,13,0,FALSE,,
+Symptoms,CO₂e Emissions Trend,zero,zero,,Coming Soon,,,,1,0,FALSE,,
+Symptoms,Annual CO₂ ppm Increase,minus-1,zero,,Coming Soon,,,,2,0,FALSE,,
+Symptoms,Rate of Temperature Increase,minus-2,zero,,Coming Soon,,,,3,,,,
+Symptoms,Best Estimate 2100 Temperature Increase,zero,zero,,Coming Soon,,,,4,0,FALSE,,
+Symptoms,Best Estimate 2100 Sea Level Rise,zero,zero,,Coming Soon,,,,5,0,FALSE,,
+Symptoms,Tipping Point Risks (Near to Mid-Term),minus-1,zero,,Coming Soon,,,,6,0,FALSE,,
+Symptoms,Extreme Events,minus-1,zero,,Coming Soon,,,,7,0,FALSE,,
