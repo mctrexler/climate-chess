@@ -1,0 +1,8 @@
+Team,Piece,Score_Current,Score_Previous,Score_Changed_Date,Summary_Current,Summary_Changed_Date,Confidence,Evidence_Links,Order
+Symptoms,CO₂e Emissions Trend,minus-2,minus-1,8/1/2025,Energy emissions rising; land use flat; CH₄ still increasing.,8/15/2025,High,https://ourworldindata.org/co2-and-other-greenhouse-gas-emissions,1
+Symptoms,Extreme Events,minus-2,minus-2,,Heat waves intensifying; flooding more frequent.,8/10/2025,Medium,https://www.ipcc.ch/report/ar6/wg1/,2
+Team Urgency,Climate Litigation,plus-1,zero,8/5/2025,Courts increasingly receptive to climate liability claims.,8/7/2025,Medium,https://climatecasechart.com,1
+Team Urgency,Renewables Deployment,plus-2,plus-1,8/1/2025,Record renewable capacity additions announced.,8/12/2025,High,https://www.iea.org/reports/renewables-2024,2
+Team No-Urgency,Climate Science as Uncertain,minus-2,minus-1,8/8/2025,Doubt narratives amplified across media despite attribution certainty.,8/9/2025,Low,https://climate.nasa.gov/evidence/,1
+Team No-Urgency,Reversing Laws and Regulations,minus-1,zero,8/4/2025,Rollback of EPA methane rule in U.S.,8/6/2025,Medium,https://www.epa.gov,2
+Team Urgency,Testing Testing,minus-1,zero,8/29/2025,This is a completely new test of the emergency broadcast systems,8/29/2025,Medium,,3
