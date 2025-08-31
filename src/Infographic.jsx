@@ -96,27 +96,22 @@ async function fetchCsv(url) {
 const SECTIONS = ["Climate Snapshot", "Chessboard", "Team No-Urgency", "Team Urgency"];
 
 function normalizeRow(r) {
-  // Trim + defaults
-  const Team = String(r.Team || "").trim();
-  const Piece = String(r.Piece || "").trim();
-  const Include = String(r.Include || "yes").trim().toLowerCase();
-  const Header_Flag = String(r.Header_Flag || "no").trim().toLowerCase();
-  const Score_Current = String(r.Score_Current || "zero").trim().toLowerCase();
-  const Score_Previous = String(r.Score_Previous || "").trim().toLowerCase();
-  const Summary_Current = String(r.Summary_Current || "").trim();
-  const Links = String(r.Links || "").trim();
-  const Order = Number.parseInt(String(r.Order ?? "").trim(), 10);
-  return {
-    Team,
-    Piece,
-    Include: Include === "yes" ? "yes" : "no",
-    Header_Flag: Header_Flag === "yes" ? "yes" : "no",
-    Score_Current,
-    Score_Previous,
-    Summary_Current,
-    Links,
-    Order: Number.isFinite(Order) ? Order : 9999,
-  };
+  const clean = (v) => String(v ?? "").trim();
+  const yesish = (v) => ["yes","y","true","1"].includes(clean(v).toLowerCase());
+
+  const Team = clean(r.Team);
+  const Piece = clean(r.Piece);
+  const Include = yesish(r.Include) ? "yes" : "no";
+  const Header_Flag = yesish(r.Header_Flag) ? "yes" : "no";
+  const Score_Current = clean(r.Score_Current).toLowerCase() || "zero";
+  const Score_Previous = clean(r.Score_Previous).toLowerCase();
+  const Summary_Current = clean(r.Summary_Current);
+  const Links = clean(r.Links);
+  const o = parseInt(clean(r.Order), 10);
+  const Order = Number.isFinite(o) ? o : 9999;
+
+  if (!Team || !Piece) return null; // drop junk rows
+  return { Team, Piece, Include, Header_Flag, Score_Current, Score_Previous, Summary_Current, Links, Order };
 }
 
 function splitSnapshotTwoColumns(items) {
