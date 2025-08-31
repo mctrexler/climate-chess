@@ -1,44 +1,108 @@
-﻿Team,Piece,Score_Current,Score_Previous,Score_Changed_Date,Summary_Current,Summary_Changed_Date,Confidence,Evidence_Links,Order,Score_Delta,Any_Update_Flag,Arrow,Dot
-Team Urgency,Global Targets and Ambition,minus-1,zero,,"With the Trump Administration in power, and the spread of right-wing populism, global targets and ambitions are under increasing pressure. ",,,,1,0,FALSE,,
-Team Urgency,National Targets and Ambition,plus-1,zero,,U.S. Targets and Ambition have literally changed 180 degrees with the Trump Administration.  This piece will show a more significant change if there is evidence that other countries' climate ambitions falter. ,,,,2,0,FALSE,,
-Team Urgency,Carbon Pricing,plus-1,zero,,"The geographic spread of explicit carbon pricing continues to expand, as does the average global carbon price.  Europe's Border Carbon Adjustment Mechanisms could aggressively promote carbon pricing in other regions. But carbon pricing generally remains well below the levels at which it would have a transformational impact on GHG emissions.  ",,,,3,0,FALSE,,
-Team Urgency,Climate Litigation,plus-1,zero,,"The recent ICJ climate ruling was hugely positive for Team Urgency. That said, the ICJ has no enforcement authority, and the ruling was only advisory in scope.  That's why it resulted in only a modest positive score change.  ",,,,4,0,FALSE,,
-Team Urgency,Climate Finance,minus-1,zero,,Coming Soon,,,,5,0,FALSE,,
-Team Urgency,Carbon Markets,zero,zero,,Carbon Markets are largely stuck in terms of their Climate Chess power on behalf of Team Urgency.  Article 6 carbon markets could end up being a significant positive or negative. ,,,,6,0,FALSE,,
-Team Urgency,Renewables Deployment,plus-1,plus-2,,The news regarding renewable energy deployment ,,,,7,0,FALSE,,
-Team Urgency,Technology Innovation General,plus-1,zero,,Coming Soon,,,,8,0,FALSE,,
-Team Urgency,Transmission Innovation and Deployment,plus-1,zero,,Coming Soon,,,,9,,,,
-Team Urgency,Energy Storage Innovation and Deployment,plus-1,zero,,Coming Soon,,,,10,,,,
-Team Urgency,Electrification Innovation and Deployment,plus-1,zero,,Coming Soon,,,,11,,,,
-Team Urgency,CDR Innovation and Deployment,zero,zero,,Coming Soon,,,,12,0,FALSE,,
-Team Urgency,NBS Innovation and Deployement,zero,zero,,Coming Soon,,,,13,,,,
-Team Urgency,Public Opinion,minus-1,zero,,Coming Soon,,,,14,0,FALSE,,
-Team Urgency,Climate Communications,zero,zero,,Coming Soon,,,,15,0,FALSE,,
-Team Urgency,Voluntary Corporate Action,minus-2,zero,,Coming Soon,,,,16,0,FALSE,,
-Team Urgency,Sectoral Action,minus-1,zero,,Coming Soon,,,,17,0,FALSE,,
-Team Urgency,Climate Economics,minus-1,zero,,Coming Soon,,,,18,0,FALSE,,
-Team Urgency,Climate Voting,minus-1,zero,,Coming Soon,,,,19,0,FALSE,,
-Team Urgency,Climate Philanthropy,zero,zero,,Coming Soon,,,,20,0,FALSE,,
-Team Urgency,Social Movements,plus-1,zero,,Coming Soon,,,,21,0,FALSE,,
-Team Urgency,Climate Change Adaptation,zero,zero,,Coming Soon,,,,22,0,FALSE,,
-Team No-Urgency,Systemic Distractions,minus-2,zero,,Coming Soon,,,,1,,,,
-Team No-Urgency,Energy Humanism as Path Forward,minus-1,zero,,Coming Soon,,,,14,0,FALSE,,
-Team No-Urgency,Climate Mitigation as Futility,minus-1,zero,,Coming Soon,,,,2,0,FALSE,,
-Team No-Urgency,Climate Science as Uncertain,minus-2,zero,,Coming Soon,,,,3,0,FALSE,,
-Team No-Urgency,Climate Mitigation as Costly,zero,zero,,Coming Soon,,,,4,0,FALSE,,
-Team No-Urgency,Renewable Energy as Bad,minus-1,zero,,Coming Soon,,,,5,0,FALSE,,
-Team No-Urgency,Minimization of Climate Risks,minus-2,zero,,Coming Soon,,,,6,0,FALSE,,
-Team No-Urgency,Criminalization of Protest,minus-1,zero,,Coming Soon,,,,7,0,FALSE,,
-Team No-Urgency,SLAPP Suits,minus-2,zero,,Coming Soon,,,,8,0,FALSE,,
-Team No-Urgency,Adaptation as Appropriate Response,zero,zero,,Coming Soon,,,,9,0,FALSE,,
-Team No-Urgency,Corporate Personhood,minus-1,zero,,Coming Soon,,,,10,0,FALSE,,
-Team No-Urgency,Gerrymandering Promotion,minus-2,zero,,Coming Soon,,,,11,0,FALSE,,
-Team No-Urgency,Political Polarization Promotion,minus-2,zero,,Coming Soon,,,,12,0,FALSE,,
-Team No-Urgency,Reversing Laws and Regulations,minus-3,zero,,Coming Soon,,,,13,0,FALSE,,
-Symptoms,CO₂e Emissions Trend,zero,zero,,Coming Soon,,,,1,0,FALSE,,
-Symptoms,Annual CO₂ ppm Increase,minus-1,zero,,Coming Soon,,,,2,0,FALSE,,
-Symptoms,Rate of Temperature Increase,minus-2,zero,,Coming Soon,,,,3,,,,
-Symptoms,Best Estimate 2100 Temperature Increase,zero,zero,,Coming Soon,,,,4,0,FALSE,,
-Symptoms,Best Estimate 2100 Sea Level Rise,zero,zero,,Coming Soon,,,,5,0,FALSE,,
-Symptoms,Tipping Point Risks (Near to Mid-Term),minus-1,zero,,Coming Soon,,,,6,0,FALSE,,
-Symptoms,Extreme Events,minus-1,zero,,Coming Soon,,,,7,0,FALSE,,
+﻿Team,Piece,Order,Include,Score_Current,Score_Previous,Summary_Current,Links,Header_Flag
+Chessboard,Chessboard,0,yes,plus-2,zero,This is a test,https://climatographer.com,yes
+Chessboard,Cognitive Dissonance,1,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Collective Action Problem,2,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Cultural Narratives,3,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Discounting in Economics,4,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Fossil Fuel Dependence,5,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Future Discounting,6,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Infrastructure Lock-In,7,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Institutional Inertia,8,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Media Incentives,9,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Misinformation Susceptibility,10,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Normalcy Bias,11,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Optimism Bias,12,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Polarization Dynamics,13,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Risk Illiteracy,14,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Chessboard,Status Quo Bias,15,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Climate Snapshot,0,yes,plus-2,zero,This is a test,https://climatographer.com,yes
+Climate Snapshot,Annual CO2 ppm Increase,1,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Best Estimate 2100 Sea Level Rise,2,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Best Estimate 2100 Temperature Increase,3,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,CH4 Trend,4,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,CO2 Trend (Energy),5,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,CO2 Trend (Land-Use),6,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Drought,7,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Flooding,8,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Heat,9,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Hurricanes,10,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,N2O Trend,11,Y,plus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Near Term Tipping Point Triggering,12,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Climate Snapshot,Precipitation,13,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Team No-Urgency,0,yes,minus-2,zero,This is a test,https://climatographer.com,yes
+Team No-Urgency,Adaptation as Appropriate Response,1,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Anti-Climate Finance,2,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Challenging Climate Finance Reform,3,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Climate Mitigation as Costly,4,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Climate Mitigation as Futility,5,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Climate Science as Uncertain,6,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Corporate Personhood,7,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Criminalization of Protest,8,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Energy Humanism as Path Forward,9,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Gerrymandering Promotion,10,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Minimization of Climate Risks,11,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Political Polarization Promotion,12,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Renewable Energy as Bad,13,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,Reversing Laws and Regulations,14,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team No-Urgency,SLAPP Suits,15,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Team Urgency,0,yes,minus-2,zero,This is a test,https://climatographer.com,yes
+Team Urgency,Airlines,1,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Amount of Climate Finance,2,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Article 6 Carbon Markets,3,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Average Carbon Price,4,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Banking,5,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Biochar,6,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Border Carbon Adjustments,7,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Buildings,8,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Business Climate Liability,9,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Business Greenwashing,10,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,COP Developments,11,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Change in Climate Concern,12,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Climate Change Adaptation,13,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Climate Messaging,14,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Climate Philanthropy,15,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Climate Risk Disclosure,16,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Climate Storytelling,17,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Climate Voting,18,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Countering Misinformation,19,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Country Climate Liability,20,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Coverage,21,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,DACC,22,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Emissions Reduction and SBTi Targets,23,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Energy Consumption,24,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Energy Generation,25,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Energy Storage,26,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Energy Transmission,27,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Finance,28,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Fraction of Global Energy Consumption,29,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Impact of Climate Finance,30,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Increase in Climate Cost Estimates,31,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Internal Carbon Pricing,32,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Level of Involvement,33,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,NDCs,34,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Necessity Defense,35,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Net Zero Targets,36,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,New Collective Action Initiatives,37,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Oil and Gas,38,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Policy Advocacy,39,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Project Announcements,40,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Reduction in Mitigation Cost Estimates,41,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Regulated Carbon Markets,42,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Renewable Economics,43,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Renewable Energy Purchases,44,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Technology Advancements/Demonstration,45,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Technology Economics,46,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,U.S. Targets and Ambition,47,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Voluntary Carbon Markets,48,Y,minus-2,zero,This is a test,https://climatographer.com,no
+Team Urgency,Weathering,49,Y,minus-2,zero,This is a test,https://climatographer.com,no
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
+,,,,minus-2,zero,This is a test,https://climatographer.com,
