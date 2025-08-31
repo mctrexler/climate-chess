@@ -2,13 +2,32 @@ import React, { useEffect, useMemo, useState } from "react";
 import Papa from "papaparse";
 
 // -----------------------------------------------------------------------------
-// Climate Chess Infographic — Single CSV loader
+// Climate Chess Infographic — Single CSV loader (mobile-friendly, tolerant yes)
 // - Reads one CSV with columns:
 //   Team, Piece, Order, Include, Score_Current, Score_Previous, Summary_Current, Links, Header_Flag
-// - Header rows (Header_Flag=yes, Order=0) render BIG titles with score + hover
+// - Header rows (Header_Flag=yes) render BIG titles with score + hover
 // - Piece rows (Header_Flag=no, Include=yes) render in lists, sorted by Order
 // - Snapshot title centered; Snapshot list split into two balanced columns
+// - Mobile tweaks: responsive columns, 2-line piece names, tap-to-open hover
 // -----------------------------------------------------------------------------
+
+// --- Helpers for tolerant yes/no parsing -----------------------------------
+const clean = (v) => String(v ?? "").trim();
+const yesish = (v) => ["yes", "y", "true", "1"].includes(clean(v).toLowerCase());
+
+// --- Responsive helpers ------------------------------------------------------
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 640px)"); // ~Tailwind 'sm'
+    const onChange = (e) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  return isMobile;
+}
 
 // --- Score helpers -----------------------------------------------------------
 const SCORE_SYMBOL = {
@@ -46,9 +65,7 @@ function ScoreBadge({ score, changed, delta, showScoreHighlights }) {
         fontWeight: 700,
         background: "#f1f5f9",
       }}
-      title={
-        delta > 0 ? "Score increased" : delta < 0 ? "Score decreased" : "Score unchanged"
-      }
+      title={delta > 0 ? "Score increased" : delta < 0 ? "Score decreased" : "Score unchanged"}
     >
       {label}
       {showScoreHighlights && (delta > 0 || delta < 0) && (
@@ -96,26 +113,30 @@ async function fetchCsv(url) {
 const SECTIONS = ["Climate Snapshot", "Chessboard", "Team No-Urgency", "Team Urgency"];
 
 function normalizeRow(r) {
-  const clean = (v) => String(v ?? "").trim();
-  const yesish = (v) => ["yes","y","true","1"].includes(clean(v).toLowerCase());
-
   const Team = clean(r.Team);
   const Piece = clean(r.Piece);
-  const Include = yesish(r.Include) ? "yes" : "no";
+
+  // Blank Include defaults to "yes". yes|y|true|1 -> yes
+  const Include = yesish(r.Include || "yes") ? "yes" : "no";
+  // yes|y|true|1 -> header row
   const Header_Flag = yesish(r.Header_Flag) ? "yes" : "no";
+
   const Score_Current = clean(r.Score_Current).toLowerCase() || "zero";
   const Score_Previous = clean(r.Score_Previous).toLowerCase();
   const Summary_Current = clean(r.Summary_Current);
   const Links = clean(r.Links);
+
   const o = parseInt(clean(r.Order), 10);
   const Order = Number.isFinite(o) ? o : 9999;
 
-  if (!Team || !Piece) return null; // drop junk rows
+  // Drop junk/trailing rows (e.g., dropdown lists)
+  if (!Team || !Piece) return null;
+
   return { Team, Piece, Include, Header_Flag, Score_Current, Score_Previous, Summary_Current, Links, Order };
 }
 
 function splitSnapshotTwoColumns(items) {
-  // balance roughly by count (category is optional/non-required now)
+  // balance roughly by count
   const left = [];
   const right = [];
   let lc = 0;
@@ -143,7 +164,7 @@ function HoverCard({ open, children }) {
         top: "100%",
         marginTop: "0.5rem",
         zIndex: 30,
-        width: "min(40rem,90vw)",
+        width: "min(40rem, 90vw)",
         background: "white",
         border: "1px solid #e2e8f0",
         borderRadius: "0.75rem",
@@ -169,13 +190,15 @@ function TitleHeader({
   showScoreHighlights,
 }) {
   const [open, setOpen] = useState(false);
+  const isTouch = typeof window !== "undefined" && "ontouchstart" in window;
   const delta = computeDelta(scoreCurrent, scorePrevious);
   const linkObjs = linkifyList(links);
 
   return (
     <div
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => !isTouch && setOpen(true)}
+      onMouseLeave={() => !isTouch && setOpen(false)}
+      onClick={() => isTouch && setOpen((v) => !v)}
       style={{
         position: "relative",
         background: centered ? "transparent" : "#f8fafc",
@@ -210,12 +233,19 @@ function TitleHeader({
 
       <HoverCard open={open}>
         <div style={{ fontWeight: 700, color: "#334155", marginBottom: "0.25rem" }}>Context</div>
-        <div style={{ whiteSpace: "pre-line", color: "#334155" }}>{summary || "No summary provided."}</div>
+        <div style={{ whiteSpace: "pre-line", color: "#334155" }}>
+          {summary || "No summary provided."}
+        </div>
         {linkObjs.length > 0 && (
           <ul style={{ marginTop: "0.5rem", paddingLeft: "1rem" }}>
             {linkObjs.map((l, i) => (
               <li key={i} style={{ marginBottom: "0.25rem" }}>
-                <a href={l.url} target="_blank" rel="noopener noreferrer" style={{ color: "#334155", textDecoration: "underline" }}>
+                <a
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#334155", textDecoration: "underline" }}
+                >
                   {l.label}
                 </a>
               </li>
@@ -229,30 +259,53 @@ function TitleHeader({
 
 function HoverRow({ row, showScoreHighlights }) {
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const isTouch = typeof window !== "undefined" && "ontouchstart" in window;
   const links = linkifyList(row.Links);
   const delta = computeDelta(row.Score_Current, row.Score_Previous);
+
   return (
     <div
       style={{ position: "relative", display: "flex", alignItems: "center", padding: "0.75rem 1rem" }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => !isTouch && setOpen(true)}
+      onMouseLeave={() => !isTouch && setOpen(false)}
+      onClick={() => isTouch && setOpen((v) => !v)}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", width: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "0.5rem",
+          width: "100%",
+        }}
+      >
         <span
           title={row.Piece}
           style={{
             minWidth: 0,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            paddingRight: "0.5rem",
             fontWeight: 600,
             color: "#1f2937",
+            // mobile-friendly wrapping (2 lines on phones)
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            whiteSpace: isMobile ? "normal" : "nowrap",
+            textOverflow: isMobile ? "clip" : "ellipsis",
+            fontSize: isMobile ? "0.95rem" : "1rem",
+            lineHeight: isMobile ? 1.25 : 1.2,
+            paddingRight: "0.5rem",
           }}
         >
           {row.Piece}
         </span>
-        <ScoreBadge score={row.Score_Current} changed={delta !== 0} delta={delta} showScoreHighlights={showScoreHighlights} />
+        <ScoreBadge
+          score={row.Score_Current}
+          changed={delta !== 0}
+          delta={delta}
+          showScoreHighlights={showScoreHighlights}
+        />
       </div>
 
       <HoverCard open={open}>
@@ -262,7 +315,12 @@ function HoverRow({ row, showScoreHighlights }) {
           <ul style={{ marginTop: "0.5rem", paddingLeft: "1rem" }}>
             {links.map((l, i) => (
               <li key={i} style={{ marginBottom: "0.25rem" }}>
-                <a href={l.url} target="_blank" rel="noopener noreferrer" style={{ color: "#334155", textDecoration: "underline" }}>
+                <a
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#334155", textDecoration: "underline" }}
+                >
                   {l.label}
                 </a>
               </li>
@@ -286,7 +344,15 @@ function Column({ titleMeta, items, showScoreHighlights }) {
       }}
     >
       {hasHeader && (
-        <div style={{ position: "sticky", top: 0, zIndex: 10, borderTopLeftRadius: "1rem", borderTopRightRadius: "1rem" }}>
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            borderTopLeftRadius: "1rem",
+            borderTopRightRadius: "1rem",
+          }}
+        >
           <TitleHeader
             title={titleMeta.title}
             scoreCurrent={titleMeta.Score_Current}
@@ -311,27 +377,29 @@ function Column({ titleMeta, items, showScoreHighlights }) {
 
 // --- Main -------------------------------------------------------------------
 export default function Infographic() {
-  const [rows, setRows] = useState(null);            // all normalized rows
-  const [meta, setMeta] = useState(null);            // section header rows by Team
+  const [rows, setRows] = useState(null); // all normalized rows
   const [source, setSource] = useState("(loading)");
   const [error, setError] = useState(null);
   const [showScoreHighlights, setShowScoreHighlights] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     (async () => {
       setError(null);
       try {
-        // Allow injection for testing: window.__CLIMATE_CHESS_DATA (normalized)
-        const injected = typeof window !== "undefined" && window.__CLIMATE_CHESS_DATA_SINGLE;
+        // Allow injection for testing: window.__CLIMATE_CHESS_DATA_SINGLE (normalized)
+        const injected =
+          typeof window !== "undefined" && window.__CLIMATE_CHESS_DATA_SINGLE;
         if (injected && Array.isArray(injected)) {
-          const norm = injected.map(normalizeRow);
+          const norm = injected.map(normalizeRow).filter(Boolean);
           setRows(norm);
           setSource("window.__CLIMATE_CHESS_DATA_SINGLE");
           return;
         }
         // Load CSV from known paths
-        let loaded = null, where = "";
+        let loaded = null,
+          where = "";
         for (const p of CSV_PATHS) {
           try {
             loaded = await fetchCsv(p);
@@ -340,7 +408,7 @@ export default function Infographic() {
           } catch {}
         }
         if (!loaded) throw new Error("Could not load climate_chess.csv from known paths.");
-        const norm = loaded.map(normalizeRow);
+        const norm = loaded.map(normalizeRow).filter(Boolean);
         setRows(norm);
         setSource(where);
       } catch (e) {
@@ -356,7 +424,11 @@ export default function Infographic() {
     const headerByTeam = {};
     SECTIONS.forEach((sec) => (headerByTeam[sec] = null));
     rows.forEach((r) => {
-      if (r.Header_Flag === "yes" && SECTIONS.includes(r.Team) && r.Piece.toLowerCase() === r.Team.toLowerCase()) {
+      if (
+        r.Header_Flag === "yes" &&
+        SECTIONS.includes(r.Team) &&
+        r.Piece.toLowerCase() === r.Team.toLowerCase()
+      ) {
         headerByTeam[r.Team] = { ...r, title: r.Team };
       }
     });
@@ -364,7 +436,9 @@ export default function Infographic() {
     const piecesByTeam = {};
     SECTIONS.forEach((sec) => (piecesByTeam[sec] = []));
     rows
-      .filter((r) => r.Header_Flag !== "yes" && r.Include === "yes" && SECTIONS.includes(r.Team))
+      .filter(
+        (r) => r.Header_Flag !== "yes" && r.Include === "yes" && SECTIONS.includes(r.Team)
+      )
       .forEach((r) => {
         piecesByTeam[r.Team].push(r);
       });
@@ -397,24 +471,51 @@ export default function Infographic() {
   const { left: snapshotLeft, right: snapshotRight } = splitSnapshotTwoColumns(snapshotItems);
 
   return (
-    <div style={{ margin: "0 auto", maxWidth: "72rem", padding: "1.5rem", fontFamily: "system-ui, sans-serif" }}>
+    <div
+      style={{
+        margin: "0 auto",
+        maxWidth: "72rem",
+        padding: isMobile ? "0.75rem" : "1.5rem",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
       {/* Header Bar */}
       <header style={{ display: "grid", gap: "0.5rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0f172a" }}>Climate Chess – Interactive Infographic</h1>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0f172a" }}>
+          Climate Chess – Interactive Infographic
+        </h1>
         <div style={{ fontSize: "0.875rem", color: "#475569" }}>
           Data source: {source} · Last loaded:{" "}
-          {new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" }).format(lastUpdated)}
+          {new Intl.DateTimeFormat(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }).format(lastUpdated)}
         </div>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <button
-            style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: "0.4rem 0.7rem", fontSize: "0.875rem", fontWeight: 600, background: showScoreHighlights ? "#059669" : "white", color: showScoreHighlights ? "white" : "#0f172a" }}
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: 12,
+              padding: "0.4rem 0.7rem",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              background: showScoreHighlights ? "#059669" : "white",
+              color: showScoreHighlights ? "white" : "#0f172a",
+            }}
             title="Toggle highlights for score changes"
             onClick={() => setShowScoreHighlights((v) => !v)}
           >
             Score Changes: {showScoreHighlights ? "ON" : "OFF"}
           </button>
           <button
-            style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: "0.4rem 0.7rem", fontSize: "0.875rem", fontWeight: 600 }}
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: 12,
+              padding: "0.4rem 0.7rem",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+            }}
             onClick={() => setReloadKey((k) => k + 1)}
             title="Force re-read CSV"
           >
@@ -434,7 +535,14 @@ export default function Infographic() {
           centered
           showScoreHighlights={showScoreHighlights}
         />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: "1rem", marginTop: "0.5rem" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${isMobile ? 1 : 2}, minmax(0,1fr))`,
+            gap: "1rem",
+            marginTop: "0.5rem",
+          }}
+        >
           <Column
             titleMeta={null}
             items={snapshotLeft}
@@ -449,19 +557,41 @@ export default function Infographic() {
       </section>
 
       {/* Three columns below */}
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: "1rem", marginTop: "1rem" }}>
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${isMobile ? 1 : 3}, minmax(0,1fr))`,
+          gap: "1rem",
+          marginTop: "1rem",
+        }}
+      >
         <Column
-          titleMeta={grouped.headerByTeam["Chessboard"] && { ...grouped.headerByTeam["Chessboard"], title: "Chessboard (Terrain)" }}
+          titleMeta={
+            grouped.headerByTeam["Chessboard"] && {
+              ...grouped.headerByTeam["Chessboard"],
+              title: "Chessboard (Terrain)",
+            }
+          }
           items={grouped.piecesByTeam["Chessboard"]}
           showScoreHighlights={showScoreHighlights}
         />
         <Column
-          titleMeta={grouped.headerByTeam["Team No-Urgency"] && { ...grouped.headerByTeam["Team No-Urgency"], title: "Team No-Urgency Pieces" }}
+          titleMeta={
+            grouped.headerByTeam["Team No-Urgency"] && {
+              ...grouped.headerByTeam["Team No-Urgency"],
+              title: "Team No-Urgency Pieces",
+            }
+          }
           items={grouped.piecesByTeam["Team No-Urgency"]}
           showScoreHighlights={showScoreHighlights}
         />
         <Column
-          titleMeta={grouped.headerByTeam["Team Urgency"] && { ...grouped.headerByTeam["Team Urgency"], title: "Team Urgency Pieces" }}
+          titleMeta={
+            grouped.headerByTeam["Team Urgency"] && {
+              ...grouped.headerByTeam["Team Urgency"],
+              title: "Team Urgency Pieces",
+            }
+          }
           items={grouped.piecesByTeam["Team Urgency"]}
           showScoreHighlights={showScoreHighlights}
         />
