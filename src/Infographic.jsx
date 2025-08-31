@@ -1,127 +1,312 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Papa from "papaparse";
 
+// -----------------------------------------------------------------------------
+// Climate Chess Infographic — Single CSV loader
+// - Reads one CSV with columns:
+//   Team, Piece, Order, Include, Score_Current, Score_Previous, Summary_Current, Links, Header_Flag
+// - Header rows (Header_Flag=yes, Order=0) render BIG titles with score + hover
+// - Piece rows (Header_Flag=no, Include=yes) render in lists, sorted by Order
+// - Snapshot title centered; Snapshot list split into two balanced columns
+// -----------------------------------------------------------------------------
+
 // --- Score helpers -----------------------------------------------------------
 const SCORE_SYMBOL = {
-  "plus-1":"➕","plus-2":"➕➕","plus-3":"➕➕➕",
-  "minus-1":"➖","minus-2":"➖➖","minus-3":"➖➖➖",
-  zero:"0"
+  "plus-1": "➕",
+  "plus-2": "➕➕",
+  "plus-3": "➕➕➕",
+  "minus-1": "➖",
+  "minus-2": "➖➖",
+  "minus-3": "➖➖➖",
+  zero: "0",
 };
-const SCORE_VALUE = {"plus-3":3,"plus-2":2,"plus-1":1,zero:0,"minus-1":-1,"minus-2":-2,"minus-3":-3};
+const SCORE_VALUE = {
+  "plus-3": 3,
+  "plus-2": 2,
+  "plus-1": 1,
+  zero: 0,
+  "minus-1": -1,
+  "minus-2": -2,
+  "minus-3": -3,
+};
 
 function ScoreBadge({ score, changed, delta, showScoreHighlights }) {
   const label = SCORE_SYMBOL[score] || "0";
   const arrow = delta > 0 ? "▲" : delta < 0 ? "▼" : "";
-  const style = {
-    marginLeft: "0.5rem",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "0.25rem",
-    borderRadius: "9999px",
-    padding: "0.125rem 0.5rem",
-    fontSize: "0.875rem",
-    fontWeight: 600,
-    background: "#f1f5f9",
-    outline: changed && showScoreHighlights ? "2px solid #f59e0b" : "none"
-  };
   return (
-    <span style={style} title={delta>0 ? "Score increased" : delta<0 ? "Score decreased" : "Score unchanged"}>
-      {label}{changed && showScoreHighlights && <span style={{color:"#b45309"}}>{arrow}</span>}
+    <span
+      style={{
+        marginLeft: "0.5rem",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.25rem",
+        borderRadius: "9999px",
+        padding: "0.125rem 0.5rem",
+        fontSize: "0.875rem",
+        fontWeight: 700,
+        background: "#f1f5f9",
+      }}
+      title={
+        delta > 0 ? "Score increased" : delta < 0 ? "Score decreased" : "Score unchanged"
+      }
+    >
+      {label}
+      {showScoreHighlights && (delta > 0 || delta < 0) && (
+        <span style={{ color: "#b45309" }}>{arrow}</span>
+      )}
     </span>
   );
 }
 
-function computeRow(it){
-  const cur = SCORE_VALUE[it.Score_Current ?? "zero"] ?? 0;
-  const prev = SCORE_VALUE[it.Score_Previous ?? it.Score_Current ?? "zero"] ?? 0;
-  const delta = cur - prev;
+function linkifyList(val) {
+  if (!val) return [];
+  const raw = Array.isArray(val) ? val : String(val).split(/[\s,]+/);
+  return raw
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((u) => {
+      try {
+        const url = new URL(u);
+        return { url: u, label: url.hostname.replace(/^www\./, "") };
+      } catch {
+        return { url: u, label: u };
+      }
+    });
+}
+
+function computeDelta(cur, prev) {
+  const c = SCORE_VALUE[cur ?? "zero"] ?? 0;
+  const p = SCORE_VALUE[prev ?? cur ?? "zero"] ?? 0;
+  return c - p;
+}
+
+// --- CSV loader --------------------------------------------------------------
+const CSV_PATHS = ["/climate_chess.csv", "/public/climate_chess.csv", "/data/climate_chess.csv"];
+
+async function fetchCsv(url) {
+  const res = await fetch(`${url}?ts=${Date.now()}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+  if (parsed.errors?.length) throw new Error(`Parse error`);
+  return parsed.data || [];
+}
+
+// --- Data shaping ------------------------------------------------------------
+const SECTIONS = ["Climate Snapshot", "Chessboard", "Team No-Urgency", "Team Urgency"];
+
+function normalizeRow(r) {
+  // Trim + defaults
+  const Team = String(r.Team || "").trim();
+  const Piece = String(r.Piece || "").trim();
+  const Include = String(r.Include || "yes").trim().toLowerCase();
+  const Header_Flag = String(r.Header_Flag || "no").trim().toLowerCase();
+  const Score_Current = String(r.Score_Current || "zero").trim().toLowerCase();
+  const Score_Previous = String(r.Score_Previous || "").trim().toLowerCase();
+  const Summary_Current = String(r.Summary_Current || "").trim();
+  const Links = String(r.Links || "").trim();
+  const Order = Number.parseInt(String(r.Order ?? "").trim(), 10);
   return {
-    ...it,
-    delta,
-    scoreChanged: delta !== 0,
-    summaryChanged: !!it.Summary_Changed_Date
+    Team,
+    Piece,
+    Include: Include === "yes" ? "yes" : "no",
+    Header_Flag: Header_Flag === "yes" ? "yes" : "no",
+    Score_Current,
+    Score_Previous,
+    Summary_Current,
+    Links,
+    Order: Number.isFinite(Order) ? Order : 9999,
   };
 }
 
-function linkifyList(val){
-  if(!val) return [];
-  const raw = Array.isArray(val) ? val : String(val).split(/[\s,]+/);
-  return raw.map(s=>s.trim()).filter(Boolean).map(u=>{
-    try { const url = new URL(u); return { url: u, label: url.hostname.replace(/^www\./,"") }; }
-    catch { return { url: u, label: u }; }
+function splitSnapshotTwoColumns(items) {
+  // balance roughly by count (category is optional/non-required now)
+  const left = [];
+  const right = [];
+  let lc = 0;
+  let rc = 0;
+  items.forEach((it) => {
+    if (lc <= rc) {
+      left.push(it);
+      lc++;
+    } else {
+      right.push(it);
+      rc++;
+    }
   });
+  return { left, right };
 }
 
-function HoverRow({ row, showScoreHighlights, showSummaryDots }){
-  const [open,setOpen] = useState(false);
-  const r = computeRow(row);
-  const links = linkifyList(row.Evidence_Links);
-
+// --- UI atoms ---------------------------------------------------------------
+function HoverCard({ open, children }) {
+  if (!open) return null;
   return (
     <div
-      style={{ position:"relative", display:"flex", alignItems:"center", padding:"0.75rem 1rem" }}
-      onMouseEnter={()=>setOpen(true)}
-      onMouseLeave={()=>setOpen(false)}
+      style={{
+        position: "absolute",
+        left: "1rem",
+        top: "100%",
+        marginTop: "0.5rem",
+        zIndex: 30,
+        width: "min(40rem,90vw)",
+        background: "white",
+        border: "1px solid #e2e8f0",
+        borderRadius: "0.75rem",
+        padding: "0.75rem",
+        fontSize: "0.85rem",
+        boxShadow: "0 10px 15px rgba(0,0,0,0.1)",
+        maxHeight: "22rem",
+        overflowY: "auto",
+      }}
     >
-      {/* single line: dot + piece + score */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"0.5rem", width:"100%" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"0.5rem", minWidth:0 }}>
-          {showSummaryDots && r.summaryChanged && (
-            <span title="Summary updated"
-              style={{ width:8, height:8, borderRadius:9999, background:"#f59e0b", flexShrink:0 }} />
-          )}
-          <span title={row.Piece} style={{
-            minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-            paddingRight:"0.5rem", fontWeight:600, color:"#1f2937"
-          }}>
-            {row.Piece}
-          </span>
-        </div>
-        <ScoreBadge score={row.Score_Current} changed={r.scoreChanged} delta={r.delta} showScoreHighlights={showScoreHighlights} />
-      </div>
-
-      {/* hover card (no dates or from→to details; links shown without "Sources") */}
-      {open && (
-        <div
-          style={{
-            position:"absolute", left:"1rem", top:"100%", marginTop:"0.5rem", zIndex:20,
-            width:"min(38rem,90vw)", background:"white", border:"1px solid #e2e8f0",
-            borderRadius:"0.75rem", padding:"0.75rem", fontSize:"0.8rem",
-            boxShadow:"0 10px 15px rgba(0,0,0,0.1)", maxHeight:"22rem", overflowY:"auto"
-          }}
-        >
-          <div style={{ fontWeight:600, color:"#334155", marginBottom:"0.25rem" }}>Context</div>
-          <div style={{ whiteSpace:"pre-line", color:"#334155" }}>{row.Summary_Current}</div>
-
-          {links.length>0 && (
-            <ul style={{ marginTop:"0.5rem", paddingLeft:"1rem" }}>
-              {links.map((l,i)=>(
-                <li key={i} style={{ marginBottom:"0.25rem" }}>
-                  <a href={l.url} target="_blank" rel="noopener noreferrer" style={{ color:"#334155", textDecoration:"underline" }}>
-                    {l.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      {children}
     </div>
   );
 }
 
-function Column({ title, items, showScoreHighlights, showSummaryDots }){
+function TitleHeader({
+  title,
+  scoreCurrent,
+  scorePrevious,
+  summary,
+  links,
+  centered = false,
+  showScoreHighlights,
+}) {
+  const [open, setOpen] = useState(false);
+  const delta = computeDelta(scoreCurrent, scorePrevious);
+  const linkObjs = linkifyList(links);
+
   return (
-    <div style={{ borderRadius:"1rem", background:"white", boxShadow:"0 1px 2px rgba(0,0,0,0.05)", border:"1px solid #e2e8f0" }}>
-      <div style={{ position:"sticky", top:0, zIndex:10, borderTopLeftRadius:"1rem", borderTopRightRadius:"1rem",
-                    background:"#f8fafc", padding:"0.75rem 1rem", fontSize:"1rem", fontWeight:600, color:"#1e293b" }}>
-        {title}
+    <div
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      style={{
+        position: "relative",
+        background: centered ? "transparent" : "#f8fafc",
+        padding: centered ? 0 : "0.9rem 1rem",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: centered ? "center" : "space-between",
+          gap: "0.5rem",
+        }}
+      >
+        <div
+          style={{
+            fontSize: centered ? "1.375rem" : "1.125rem",
+            fontWeight: centered ? 900 : 800,
+            letterSpacing: centered ? "0.015em" : "0.01em",
+            color: "#0f172a",
+          }}
+        >
+          {title}
+        </div>
+        <ScoreBadge
+          score={scoreCurrent}
+          changed={delta !== 0}
+          delta={delta}
+          showScoreHighlights={showScoreHighlights}
+        />
       </div>
+
+      <HoverCard open={open}>
+        <div style={{ fontWeight: 700, color: "#334155", marginBottom: "0.25rem" }}>Context</div>
+        <div style={{ whiteSpace: "pre-line", color: "#334155" }}>{summary || "No summary provided."}</div>
+        {linkObjs.length > 0 && (
+          <ul style={{ marginTop: "0.5rem", paddingLeft: "1rem" }}>
+            {linkObjs.map((l, i) => (
+              <li key={i} style={{ marginBottom: "0.25rem" }}>
+                <a href={l.url} target="_blank" rel="noopener noreferrer" style={{ color: "#334155", textDecoration: "underline" }}>
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </HoverCard>
+    </div>
+  );
+}
+
+function HoverRow({ row, showScoreHighlights }) {
+  const [open, setOpen] = useState(false);
+  const links = linkifyList(row.Links);
+  const delta = computeDelta(row.Score_Current, row.Score_Previous);
+  return (
+    <div
+      style={{ position: "relative", display: "flex", alignItems: "center", padding: "0.75rem 1rem" }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", width: "100%" }}>
+        <span
+          title={row.Piece}
+          style={{
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            paddingRight: "0.5rem",
+            fontWeight: 600,
+            color: "#1f2937",
+          }}
+        >
+          {row.Piece}
+        </span>
+        <ScoreBadge score={row.Score_Current} changed={delta !== 0} delta={delta} showScoreHighlights={showScoreHighlights} />
+      </div>
+
+      <HoverCard open={open}>
+        <div style={{ fontWeight: 600, color: "#334155", marginBottom: "0.25rem" }}>Context</div>
+        <div style={{ whiteSpace: "pre-line", color: "#334155" }}>{row.Summary_Current}</div>
+        {links.length > 0 && (
+          <ul style={{ marginTop: "0.5rem", paddingLeft: "1rem" }}>
+            {links.map((l, i) => (
+              <li key={i} style={{ marginBottom: "0.25rem" }}>
+                <a href={l.url} target="_blank" rel="noopener noreferrer" style={{ color: "#334155", textDecoration: "underline" }}>
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </HoverCard>
+    </div>
+  );
+}
+
+function Column({ titleMeta, items, showScoreHighlights }) {
+  const hasHeader = !!titleMeta;
+  return (
+    <div
+      style={{
+        borderRadius: "1rem",
+        background: "white",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+        border: "1px solid #e2e8f0",
+      }}
+    >
+      {hasHeader && (
+        <div style={{ position: "sticky", top: 0, zIndex: 10, borderTopLeftRadius: "1rem", borderTopRightRadius: "1rem" }}>
+          <TitleHeader
+            title={titleMeta.title}
+            scoreCurrent={titleMeta.Score_Current}
+            scorePrevious={titleMeta.Score_Previous}
+            summary={titleMeta.Summary_Current}
+            links={titleMeta.Links}
+            showScoreHighlights={showScoreHighlights}
+          />
+        </div>
+      )}
       <div>
-        {items.map((row,i)=>(
-          <React.Fragment key={i}>
-            <HoverRow row={row} showScoreHighlights={showScoreHighlights} showSummaryDots={showSummaryDots} />
-            {i < items.length-1 && <div style={{ height:1, background:"#f1f5f9" }} />}
+        {items.map((row, i) => (
+          <React.Fragment key={`${row.Team}-${row.Piece}-${i}`}>
+            <HoverRow row={row} showScoreHighlights={showScoreHighlights} />
+            {i < items.length - 1 && <div style={{ height: 1, background: "#f1f5f9" }} />}
           </React.Fragment>
         ))}
       </div>
@@ -129,194 +314,163 @@ function Column({ title, items, showScoreHighlights, showSummaryDots }){
   );
 }
 
-function Changelog({ data, open, onClose, mode }){
-  if(!open) return null;
-
-  const rows = Object.entries(data).flatMap(([team, arr]) =>
-    arr.map(r => ({...computeRow(r), Team: team}))
-  );
-  const filtered = rows.filter(r => mode === "score" ? r.scoreChanged : r.summaryChanged);
-  const grouped = filtered.reduce((acc,r)=>{ (acc[r.Team] ||= []).push(r); return acc; },{});
-  const total = filtered.length;
-
-  return (
-    <div
-      onClick={onClose}
-      style={{ position:"fixed", inset:0, zIndex:40, display:"flex", justifyContent:"flex-end", background:"rgba(0,0,0,0.3)" }}
-    >
-      <div
-        onClick={(e)=>e.stopPropagation()}
-        style={{ height:"100%", width:"min(30rem,100%)", overflow:"auto", background:"white", padding:"1rem",
-                 boxShadow:"0 10px 15px rgba(0,0,0,0.2)" }}
-      >
-        <div style={{ marginBottom:"0.75rem", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <div style={{ fontSize:"1.125rem", fontWeight:600, color:"#0f172a" }}>
-            Changelog – {mode === "score" ? "Score changes" : "Summary updates"}
-          </div>
-          <button onClick={onClose} style={{ border:"1px solid #cbd5e1", borderRadius:8, padding:"0.25rem 0.5rem", fontSize:"0.875rem" }}>
-            Close
-          </button>
-        </div>
-        <div style={{ fontSize:"0.9rem", color:"#475569" }}>{total} item{total===1?"":"s"} updated.</div>
-        <div style={{ marginTop:"0.75rem" }}>
-          {Object.entries(grouped).map(([team, arr])=>(
-            <div key={team} style={{ marginBottom:"0.75rem" }}>
-              <div style={{ marginBottom:"0.5rem", fontSize:"0.9rem", fontWeight:600, color:"#1f2937" }}>{team}</div>
-              <ul style={{ listStyle:"none", padding:0, margin:0 }}>
-                {arr.map((r,i)=>(
-                  <li key={i} style={{ border:"1px solid #e2e8f0", borderRadius:8, padding:"0.5rem", fontSize:"0.75rem", marginBottom:"0.5rem" }}>
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                      <div style={{ fontWeight:600, color:"#1f2937" }}>{r.Piece}</div>
-                      <div style={{ color:"#475569" }}>
-                        {mode==="score" ? "Score changed" : "Summary updated"}
-                      </div>
-                    </div>
-                    <div style={{ marginTop:"0.25rem", color:"#334155" }}>{r.Summary_Current}</div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function Infographic(){
-  const [data, setData] = useState(null);
+// --- Main -------------------------------------------------------------------
+export default function Infographic() {
+  const [rows, setRows] = useState(null);            // all normalized rows
+  const [meta, setMeta] = useState(null);            // section header rows by Team
+  const [source, setSource] = useState("(loading)");
+  const [error, setError] = useState(null);
   const [showScoreHighlights, setShowScoreHighlights] = useState(true);
-  const [showSummaryDots, setShowSummaryDots] = useState(true);
-  const [logOpen, setLogOpen] = useState(false);
-  const [logMode, setLogMode] = useState("summary"); // 'summary' | 'score'
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    Papa.parse(`/climate_chess.csv?ts=${Date.now()}`, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const rows = results.data;
-
-        // Canonicalize & group
-        const CANON = {"team urgency":"Team Urgency","team no-urgency":"Team No-Urgency","symptoms":"Symptoms"};
-        const normTeam = (t)=> CANON[(t||"").trim().toLowerCase()] || (t||"").trim();
-
-        const grouped = { "Team Urgency": [], "Team No-Urgency": [], "Symptoms": [] };
-        rows.forEach(r => {
-          const team = normTeam(r.Team);
-          if (grouped[team]) grouped[team].push(r);
-        });
-
-        // Sort within each column by Order, then Piece
-        Object.keys(grouped).forEach(k=>{
-          grouped[k].sort((a,b)=>{
-            const ao = parseInt(a.Order||"9999",10), bo = parseInt(b.Order||"9999",10);
-            if (ao !== bo) return ao - bo;
-            return String(a.Piece||"").localeCompare(String(b.Piece||""));
-          });
-        });
-
-        setData(grouped);
-      },
-      error: (err) => { console.error("CSV parse error", err); }
-    });
+    (async () => {
+      setError(null);
+      try {
+        // Allow injection for testing: window.__CLIMATE_CHESS_DATA (normalized)
+        const injected = typeof window !== "undefined" && window.__CLIMATE_CHESS_DATA_SINGLE;
+        if (injected && Array.isArray(injected)) {
+          const norm = injected.map(normalizeRow);
+          setRows(norm);
+          setSource("window.__CLIMATE_CHESS_DATA_SINGLE");
+          return;
+        }
+        // Load CSV from known paths
+        let loaded = null, where = "";
+        for (const p of CSV_PATHS) {
+          try {
+            loaded = await fetchCsv(p);
+            where = p;
+            break;
+          } catch {}
+        }
+        if (!loaded) throw new Error("Could not load climate_chess.csv from known paths.");
+        const norm = loaded.map(normalizeRow);
+        setRows(norm);
+        setSource(where);
+      } catch (e) {
+        setError(String(e?.message || e));
+      }
+    })();
   }, [reloadKey]);
 
-  const lastUpdated = useMemo(()=>{
-    if(!data) return new Date();
-    const all = Object.values(data).flat();
-    const times = all.map(r=>Math.max(
-      Date.parse(r.Score_Changed_Date || 0) || 0,
-      Date.parse(r.Summary_Changed_Date || 0) || 0
-    ));
-    const ms = Math.max(...times,0);
-    return ms ? new Date(ms) : new Date();
-  }, [data]);
+  const grouped = useMemo(() => {
+    if (!rows) return null;
 
-  if (!data) return <div style={{padding:16}}>Loading…</div>;
+    // Split header vs pieces; filter Include=yes for pieces
+    const headerByTeam = {};
+    SECTIONS.forEach((sec) => (headerByTeam[sec] = null));
+    rows.forEach((r) => {
+      if (r.Header_Flag === "yes" && SECTIONS.includes(r.Team) && r.Piece.toLowerCase() === r.Team.toLowerCase()) {
+        headerByTeam[r.Team] = { ...r, title: r.Team };
+      }
+    });
+
+    const piecesByTeam = {};
+    SECTIONS.forEach((sec) => (piecesByTeam[sec] = []));
+    rows
+      .filter((r) => r.Header_Flag !== "yes" && r.Include === "yes" && SECTIONS.includes(r.Team))
+      .forEach((r) => {
+        piecesByTeam[r.Team].push(r);
+      });
+
+    // Sort by Order ascending (ties by Piece)
+    Object.keys(piecesByTeam).forEach((team) => {
+      piecesByTeam[team].sort((a, b) => {
+        const ao = a.Order ?? 9999;
+        const bo = b.Order ?? 9999;
+        if (ao !== bo) return ao - bo;
+        return String(a.Piece || "").localeCompare(String(b.Piece || ""));
+      });
+    });
+
+    return { headerByTeam, piecesByTeam };
+  }, [rows]);
+
+  const lastUpdated = useMemo(() => new Date(), [rows]);
+
+  if (error) {
+    return (
+      <div style={{ padding: 16, color: "#b91c1c" }}>
+        CSV load error: {error} &mdash; ensure <code>/public/climate_chess.csv</code> exists and uses the agreed columns.
+      </div>
+    );
+  }
+  if (!grouped) return <div style={{ padding: 16 }}>Loading…</div>;
+
+  const snapshotItems = grouped.piecesByTeam["Climate Snapshot"] || [];
+  const { left: snapshotLeft, right: snapshotRight } = splitSnapshotTwoColumns(snapshotItems);
 
   return (
-    <div style={{ margin:"0 auto", maxWidth: "72rem", padding:"1.5rem", fontFamily:"system-ui, sans-serif" }}>
-      <header style={{ display:"grid", gap:"0.75rem" }}>
-        <h1 style={{ fontSize:"1.5rem", fontWeight:700, color:"#0f172a" }}>Climate Chess – Interactive Infographic</h1>
-        <p style={{ color:"#334155" }}>
-          <strong>Climate Chess</strong> frames the struggle over climate action as a live contest between
-          <em> Team Urgency</em> and <em> Team No-Urgency</em>. The outcome appears as real-world <em>Symptoms</em> (results) on the right.
-        </p>
-        <div style={{ fontSize:"0.875rem", color:"#475569" }}>
-          Infographic last updated: {new Intl.DateTimeFormat(undefined,{year:"numeric",month:"short",day:"numeric"}).format(lastUpdated)}
+    <div style={{ margin: "0 auto", maxWidth: "72rem", padding: "1.5rem", fontFamily: "system-ui, sans-serif" }}>
+      {/* Header Bar */}
+      <header style={{ display: "grid", gap: "0.5rem" }}>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0f172a" }}>Climate Chess – Interactive Infographic</h1>
+        <div style={{ fontSize: "0.875rem", color: "#475569" }}>
+          Data source: {source} · Last loaded:{" "}
+          {new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" }).format(lastUpdated)}
         </div>
-        <div style={{ border:"1px solid #e2e8f0", borderRadius:12, background:"#f8fafc", padding:"0.75rem", fontSize:"0.9rem", color:"#334155" }}>
-          <strong>Scoring context:</strong> Scores change infrequently and reflect longer-term status. A score change signals a significant development.
-          Hover summaries can update more often; the ● dot indicates a recent summary update. ▲/▼ on the chip indicate the score moved.
-        </div>
-
-        <div style={{ display:"flex", flexWrap:"wrap", alignItems:"center", gap:"0.5rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <button
-            style={{ border:"1px solid #cbd5e1", borderRadius:12, padding:"0.5rem 0.75rem",
-                     fontSize:"0.875rem", fontWeight:600, background: showSummaryDots?"#059669":"white", color: showSummaryDots?"white":"#0f172a" }}
-            onClick={()=>setShowSummaryDots(v=>!v)} title="Toggle indicators for hover summary updates"
-          >
-            Summary Updates: {showSummaryDots ? "ON" : "OFF"}
-          </button>
-
-          <button
-            style={{ border:"1px solid #cbd5e1", borderRadius:12, padding:"0.5rem 0.75rem",
-                     fontSize:"0.875rem", fontWeight:600, background: showScoreHighlights?"#059669":"white", color: showScoreHighlights?"white":"#0f172a" }}
-            onClick={()=>setShowScoreHighlights(v=>!v)} title="Toggle highlights for score changes"
+            style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: "0.4rem 0.7rem", fontSize: "0.875rem", fontWeight: 600, background: showScoreHighlights ? "#059669" : "white", color: showScoreHighlights ? "white" : "#0f172a" }}
+            title="Toggle highlights for score changes"
+            onClick={() => setShowScoreHighlights((v) => !v)}
           >
             Score Changes: {showScoreHighlights ? "ON" : "OFF"}
           </button>
-
           <button
-            style={{ border:"1px solid #cbd5e1", borderRadius:12, padding:"0.5rem 0.75rem",
-                     fontSize:"0.875rem", fontWeight:600, background:"white", color:"#0f172a" }}
-            onClick={()=>setLogOpen(o=>!o)} title="Open/close changelog"
-          >
-            {logOpen ? "Close Changelog" : "View Changelog"}
-          </button>
-
-          <button
-            style={{ border:"1px solid #cbd5e1", borderRadius:12, padding:"0.5rem 0.75rem",
-                     fontSize:"0.875rem", fontWeight:600, background:"white", color:"#0f172a" }}
-            onClick={()=>setReloadKey(k=>k+1)} title="Force re-read CSV"
+            style={{ border: "1px solid #cbd5e1", borderRadius: 12, padding: "0.4rem 0.7rem", fontSize: "0.875rem", fontWeight: 600 }}
+            onClick={() => setReloadKey((k) => k + 1)}
+            title="Force re-read CSV"
           >
             Reload Data
           </button>
-
-          <div style={{ display:"flex", alignItems:"center", gap:"0.5rem", fontSize:"0.75rem" }}>
-            <label>Mode:</label>
-            <select
-              value={logMode}
-              onChange={(e)=>setLogMode(e.target.value)}
-              title="Choose which updates to list"
-              style={{ border:"1px solid #cbd5e1", borderRadius:8, padding:"2px 6px" }}
-            >
-              <option value="summary">Summary updates</option>
-              <option value="score">Score changes</option>
-            </select>
-          </div>
-
-          <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:"0.5rem",
-                        border:"1px solid #e2e8f0", borderRadius:12, background:"#f8fafc", padding:"0.375rem 0.5rem", fontSize:"0.75rem" }}>
-            <span style={{ fontWeight:600, color:"#0f172a" }}>Legend</span>
-            <span style={{ color:"#334155" }}>➕/➖ = score · ▲/▼ = score changed · ● = summary updated</span>
-          </div>
         </div>
       </header>
 
-      {/* Three columns */}
-      <section style={{
-        display:"grid", gridTemplateColumns:"repeat(3, minmax(0,1fr))", gap:"1rem", marginTop:"1rem"
-      }}>
-        <Column title="Team Urgency Pieces" items={data["Team Urgency"]} showScoreHighlights={showScoreHighlights} showSummaryDots={showSummaryDots} />
-        <Column title="Team No-Urgency Pieces" items={data["Team No-Urgency"]} showScoreHighlights={showScoreHighlights} showSummaryDots={showSummaryDots} />
-        <Column title="Symptoms / Risks (Results)" items={data["Symptoms"]} showScoreHighlights={showScoreHighlights} showSummaryDots={showSummaryDots} />
+      {/* Centered Snapshot Title with score + hover */}
+      <section style={{ marginTop: "1rem" }}>
+        <TitleHeader
+          title="Climate Snapshot"
+          scoreCurrent={grouped.headerByTeam["Climate Snapshot"]?.Score_Current || "zero"}
+          scorePrevious={grouped.headerByTeam["Climate Snapshot"]?.Score_Previous || ""}
+          summary={grouped.headerByTeam["Climate Snapshot"]?.Summary_Current || ""}
+          links={grouped.headerByTeam["Climate Snapshot"]?.Links || ""}
+          centered
+          showScoreHighlights={showScoreHighlights}
+        />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: "1rem", marginTop: "0.5rem" }}>
+          <Column
+            titleMeta={null}
+            items={snapshotLeft}
+            showScoreHighlights={showScoreHighlights}
+          />
+          <Column
+            titleMeta={null}
+            items={snapshotRight}
+            showScoreHighlights={showScoreHighlights}
+          />
+        </div>
       </section>
 
-      <Changelog data={data} open={logOpen} onClose={()=>setLogOpen(false)} mode={logMode} />
+      {/* Three columns below */}
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: "1rem", marginTop: "1rem" }}>
+        <Column
+          titleMeta={grouped.headerByTeam["Chessboard"] && { ...grouped.headerByTeam["Chessboard"], title: "Chessboard (Terrain)" }}
+          items={grouped.piecesByTeam["Chessboard"]}
+          showScoreHighlights={showScoreHighlights}
+        />
+        <Column
+          titleMeta={grouped.headerByTeam["Team No-Urgency"] && { ...grouped.headerByTeam["Team No-Urgency"], title: "Team No-Urgency Pieces" }}
+          items={grouped.piecesByTeam["Team No-Urgency"]}
+          showScoreHighlights={showScoreHighlights}
+        />
+        <Column
+          titleMeta={grouped.headerByTeam["Team Urgency"] && { ...grouped.headerByTeam["Team Urgency"], title: "Team Urgency Pieces" }}
+          items={grouped.piecesByTeam["Team Urgency"]}
+          showScoreHighlights={showScoreHighlights}
+        />
+      </section>
     </div>
   );
 }
